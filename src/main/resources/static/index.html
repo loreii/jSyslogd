@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8" />
+<meta
+	name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<!-- Bootstrap CSS -->
+<link
+	rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous" />
+<link
+	rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.5"></script>
+<title>Syslog</title>
+<style>
+[v-cloak] {
+	display: none;
+}
+</style>
+<link
+	rel="stylesheet"
+	type="text/css"
+	href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+</head>
+<body>
+	<div id="app">
+		<nav class="navbar navbar-light bg-light justify-content-between">
+			<a
+				id="logo"
+				class="navbar-brand"
+				data-toggle="collapse"
+				data-target="#collapseOne"
+				aria-expanded="true"
+				aria-controls="collapseOne"><i class="fa fa-bars"></i> Syslog </a>
+			<div class="form-inline">
+				<input
+					class="form-control mr-sm-2"
+					type="search"
+					v-model="search"
+					placeholder="Search"
+					aria-label="Search"
+					data-toggle="tooltip"
+					data-placement="bottom"
+					title="Text search by hostname, structured data and message" />
+				<button
+					class="btn btn-outline-success my-2 my-sm-0"
+					type="button"
+					@click.stop="find">
+					Search on <span v-cloak>{{dbSize}}</span> entries
+				</button>
+			</div>
+		</nav>
+		<div id="accordion">
+			<div class="card">
+				<div
+					id="collapseOne"
+					class="collapse show"
+					aria-labelledby="headingOne"
+					data-parent="#accordion">
+					<div
+						class="options clearfix"
+						style="margin-top: 6px; margin-left: 20px">
+						<div class="ck-button">
+							<label> <input type="checkbox" value="1" name="port" checked="checked" /> <span>PORT</span></label>
+							<label> <input type="checkbox" value="1" name="pri" checked="checked" /> <span>PRI</span> </label> 
+							<label> <input type="checkbox" value="1" name="version" /> <span>VERSION</span></label>
+							<label> <input type="checkbox" value="1" name="timestamp" checked="checked"/> <span>TIMESTAMP</span></label> 
+							<label> <input type="checkbox" value="1" name="hostname" checked="checked"/> <span>HOSTNAME</span></label> 
+							<label> <input type="checkbox" value="1" name="appname" /> <span>APPNAME</span></label>
+							<label> <input type="checkbox" value="1" name="procid" /> <span>PROCID</span></label> 
+							<label> <input type="checkbox" value="1" name="msgid" /> <span>MSGID</span></label> 
+							<label> <input type="checkbox" value="1" name="structureddata" /> <span>STRUCTUREDDATA</span></label> 
+							<label> <input type="checkbox" value="1" name="msg" checked="checked" /> <span>MSG</span></label>
+						</div>
+						<form
+							style="margin-bottom: 20px"
+							class="needs-validation"
+							novalidate>
+							<div class="form-row">
+								<div class="col-md-4 mb-3">
+									<label for="inputState">Hostname</label> 
+									<select v-model="searchHostname"
+										id="inputState"
+										title="Choose..."
+										class="form-control">
+										<option ></option>
+										<option v-for="l in hostname" v-bind:value="l">{{l}}</option>
+									</select>
+								</div>
+								<div class="col-md-4 mb-3">
+									<label for="inputState">Priority</label> 
+									<select v-model="searchPri"
+										id="inputState"
+										class="form-control"
+										title="Choose...">
+										<option selected></option>
+										<option v-for="l in pri" v-bind:value="l">{{l}}</option>
+									</select>
+								</div>
+								<div class="col-md-4 mb-3">
+									<label for="daterange">Interval</label> <input
+										id="daterange"
+										class="form-control"
+										type="text"
+										name="daterange"
+										value="01/01/2015 - 01/31/2015" />
+								</div>
+							</div>
+							<button
+								class="btn btn-primary"
+								type="button"
+								@click.stop="find">Refine data</button>
+							<button
+								class="btn btn-primary"
+								type="button"
+								@click.stop="clean">Clean filters</button>	
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="table-responsive-sm clearfix">
+			<nav
+				aria-label="Page navigation example"
+				style="margin-top: 15px; margin-right: 15px;">
+				<ul
+					class="pagination justify-content-end"
+					v-cloak>
+					<!-- disabled -->
+					<li class="page-item"><a
+						class="page-link"
+						@click.stop="previous"
+						tabindex="-1">Previous</a></li>
+					<li class="page-item"><a
+						class="page-link"
+						href="#">{{page}}/{{totalPages}}</a></li>
+					<li class="page-item"><a
+						class="page-link"
+						@click.stop="next">Next</a></li>
+				</ul>
+			</nav>
+			<table
+				class="table"
+				v-cloak>
+				<thead>
+					<tr>
+						<!-- th class="line">LINE</th-->
+						<th class="address">ADDRESS</th>
+						<th class="port">PORT</th>
+						<th class="pri">PRI</th>
+						<th class="version">VERSION</th>
+						<th class="timestamp">TIMESTAMP</th>
+						<th class="hostname">HOSTNAME</th>
+						<th class="appname">APPNAME</th>
+						<th class="procid">PROCID</th>
+						<th class="msgid">MSGID</th>
+						<th class="structureddata">STRUCTUREDDATA</th>
+						<th class="msg">MSG</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="l in table">
+						<!-- td class="line">1</td-->
+						<!-- content -->
+						<td class="address">{{l.address}}</td>
+						<td class="port">{{l.port}}</td>
+						<td class="pri"><span
+							v-if="l.pri==131"
+							class="badge badge-danger">Error</span> <span
+							v-else-if="l.pri==135"
+							class="badge badge-success">Debug</span> <span
+							v-else-if="l.pri==132"
+							class="badge badge-warning">Warning</span> <span
+							v-else-if="l.pri==134"
+							class="badge badge-info">Info</span> <span
+							v-else
+							class="badge badge-primary">{{l.pri}}</span></td>
+						<td class="version">{{l.version}}</td>
+						<td class="timestamp">{{l.timestamp}}</td>
+						<td class="hostname">{{l.hostname}}</td>
+						<td class="appname">{{l.appName}}</td>
+						<td class="procid">{{l.procId}}</td>
+						<td class="msgid">{{l.msgId}}</td>
+						<td class="structureddata">{{l.structuredData}}</td>
+						<td class="msg">{{l.msg}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<!-- Optional JavaScript -->
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script
+		src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+		integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+		crossorigin="anonymous"></script>
+	<!-- Tooltip -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+	<!-- Include Date Range Picker -->
+	<script
+		type="text/javascript"
+		src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+	<script
+		type="text/javascript"
+		src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+	<script>
+		$("input:checkbox:not(:checked)").each(function() {
+			var column = "table ." + $(this).attr("name");
+			$(column).hide();
+		});
+	</script>
+	<script>
+		function query(page, search, searchHostname, searchPri,st,et) { //TODO use an object as parameter search
+			
+			qs = "/q?search=" + p(search) + "&page=" + page +"&hostname="+p(searchHostname)+"&pri="+p(searchPri)+"&from="+p(st)+"&to="+p(et);
+			console.log(qs);
+			Vue.http.get(qs).then(function(response) {
+				app.table = response.data.data;
+				app.totalPages = response.data.totalPages
+				app.page = page;
+			}, function(error) {
+				console.log(error.statusText);
+			});
+		};
+		
+		function p(e){
+			return e = (e == undefined) ? "" : e;
+		}
+
+		var app = new Vue({
+			el : '#app',
+			data : {
+				table : [],
+				page : 0,
+				dbSize : 0,
+				totalPages : 0,
+				//current full text search
+				search : '',
+				searchPri : '',
+				searchHostname : '',
+				searchStartTime :'',
+				searchEndTime :'',
+				//suggestions sets
+				hostname :[],
+				pri:[]
+			},
+			methods : {
+				next : function() {
+					if (this.page < this.totalPages)
+						query(this.page + 1, this.search,this.searchHostname,this.searchPri,this.searchStartTime,this.searchEndTime);
+				},
+				previous : function() {
+					if (this.page > 0)
+						query(this.page - 1, this.search,this.searchHostname,this.searchPri,this.searchStartTime,this.searchEndTime);
+
+				},
+				find : function() {
+					query(0, this.search,this.searchHostname,this.searchPri,this.searchStartTime,this.searchEndTime);
+				},
+				clean : function() {
+					this.search='';
+					this.searchHostname='';
+					this.searchPri='';
+					this.searchStartTime='';
+					this.searchEndTime='';
+					query(0, this.search,this.searchHostname,this.searchPri,this.searchStartTime,this.searchEndTime);
+				}
+			},
+			computed : {},
+			beforeCreate : function() {
+				query(0, this.search,this.searchHostname,this.searchPri);
+				Vue.http.get("/size").then(function(response) {
+					app.dbSize = response.data.size;
+				}, function(error) {
+					console.log(error.statusText);
+					app.dbSize = null;
+				});
+				//full load suggestion 4 now avoid dynamic suggestions
+				Vue.http.get("/suggestions?search=*&type=hostname").then(function(response) {
+					app.hostname = response.data.data.map(function(c){return c.value});
+					app.hostname.sort(); 
+				}, function(error) {
+					console.log(error.statusText);
+				});
+				Vue.http.get("/suggestions?search=*&type=pri").then(function(response) {
+					app.pri = response.data.data.map(function(c){return c.value});
+					app.pri.sort(); 
+				}, function(error) {
+					console.log(error.statusText);
+				});
+	
+			}
+		});//end vue.app
+		
+		
+		$(function() {
+			$('[data-toggle="tooltip"]').tooltip({
+				html : true
+			})
+		});
+	</script>
+	<script>
+		$("input:checkbox").click(function() {
+			var column = "table ." + $(this).attr("name");
+			$(column).toggle();
+		});
+		$('input[name="daterange"]')
+				.daterangepicker(
+						{
+							"autoApply" : true,
+							"startDate" : "01/25/2018",
+							"endDate" : "01/31/2018"
+						},
+						function(start, end, label) {
+							app.searchStartTime = start.unix();	
+							app.searchEndTime = end.unix();
+						});
+	</script>
+</body>
+</html>

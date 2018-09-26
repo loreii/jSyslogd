@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8" />
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous" />
+
+<title>Syslog</title>
+</head>
+<body>
+
+	<nav class="navbar navbar-light bg-light justify-content-between">
+		<a class="navbar-brand">Syslog</a>
+		<form class="form-inline">
+			<input class="form-control mr-sm-2" type="search"
+				placeholder="Search" aria-label="Search" />
+			<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+		</form>
+	</nav>
+	<div class="options clearfix">
+		<div class="ck-button">
+			<label><input type="checkbox" value="1" name="line" checked="checked"/><span>Line</span></label>
+			<label><input type="checkbox" value="1" name="address" checked="checked"/><span>ADDRESS</span></label>
+			<label><input type="checkbox" value="1" name="port" checked="checked"/><span>PORT</span></label>
+			<label><input type="checkbox" value="1" name="pri" checked="checked"/><span>PRI</span></label>
+			<label><input type="checkbox" value="1" name="version" checked="checked"/><span>VERSION</span></label>
+			<label><input type="checkbox" value="1" name="timestamp" checked="checked"/><span>TIMESTAMP</span></label>
+			<label><input type="checkbox" value="1" name="hostname" checked="checked"/><span>HOSTNAME</span></label>
+			<label><input type="checkbox" value="1" name="appname" checked="checked"/><span>APPNAME</span></label>
+			<label><input type="checkbox" value="1" name="procid" checked="checked"/><span>PROCID</span></label>
+			<label><input type="checkbox" value="1" name="msgid" checked="checked"/><span>MSGID</span></label>
+			<label><input type="checkbox" value="1" name="structureddata" checked="checked"/><span>STRUCTUREDDATA</span></label>
+			<label><input type="checkbox" value="1" name="msg" checked="checked"/><span>MSG</span></label>
+		</div>
+		
+	</div>
+	<table class="table">
+		<thead>
+			<tr>
+
+				<th class="line">LINE</th>
+				<th class="address">ADDRESS</th>
+				<th class="port">PORT</th>
+				<th class="pri">PRI</th>
+				<th class="version">VERSION</th>
+				<th class="timestamp">TIMESTAMP</th>
+				<th class="hostname">HOSTNAME</th>
+				<th class="appname">APPNAME</th>
+				<th class="procid">PROCID</th>
+				<th class="msgid">MSGID</th>
+				<th class="structureddata">STRUCTUREDDATA</th>
+				<th class="msg">MSG</th>
+
+			</tr>
+		</thead>
+		<tbody>
+			<tr th:each="e,iterationStatus  : ${list}"
+				th:classappend="${(e.pri==131 ? 'table-danger ' :'')+(e.pri==134? 'table-info':'')+(e.pri==132? 'table-warning':'')}">
+				<td class="line" th:text="${iterationStatus.count}">1</td>
+				<!-- content -->
+				<td class="address" th:text="${e.address}"></td>
+				<td class="port" th:text="${e.port}"></td>
+				<td class="pri" th:text="${e.pri}"></td>
+				<td class="version" th:text="${e.version}"></td>
+				<td class="timestamp" th:text="${e.timestamp}"></td>
+				<td class="hostname" th:text="${e.hostname}"></td>
+				<td class="appname" th:text="${e.appName}"></td>
+				<td class="procid" th:text="${e.procId}"></td>
+				<td class="msgid" th:text="${e.msgId}"></td>
+				<td class="structureddata" th:text="${e.structuredData}"></td>
+				<td class="msg" th:text="${e.msg}"></td>
+			</tr>
+		</tbody>
+	</table>
+	<nav aria-label="Page navigation example">
+		<ul class="pagination justify-content-end">
+			<li class="page-item disabled"><a class="page-link" href="#"
+				tabindex="-1">Previous</a></li>
+			<li class="page-item"><a class="page-link" href="#">1</a></li>
+			<li class="page-item"><a class="page-link" href="#">2</a></li>
+			<li class="page-item"><a class="page-link" href="#">3</a></li>
+			<li class="page-item"><a class="page-link" href="#">Next</a></li>
+		</ul>
+	</nav>
+
+
+	<!-- Optional JavaScript -->
+	<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+		integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+		integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+		crossorigin="anonymous"></script>
+	<script
+		src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+		integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+		crossorigin="anonymous"></script>
+
+
+	<script>
+		$("input:checkbox:not(:checked)").each(function() {
+			var column = "table ." + $(this).attr("name");
+			$(column).hide();
+		});
+
+		$("input:checkbox").click(function() {
+			var column = "table ." + $(this).attr("name");
+			$(column).toggle();
+		});
+	</script>
+</body>
+</html>
